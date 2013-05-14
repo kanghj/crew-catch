@@ -1,0 +1,24 @@
+{% extends "base1.html" %}
+{% block content %}     
+<h2>Admin</h2>
+
+<form action="/admin" method="post"> 
+  <p> Select students to delete: <label class = "checkbox"> <input id="checkall" type="checkbox" name="select_all" value="all"/>Select all </label></p>
+  <div>
+    <table class = "table table-striped">
+      <thead>
+	<tr><th> </th><th>Name</th><th>Email</th></tr>
+      </thead>
+      <tbody>
+	{% for profile in profiles %}
+	<tr><td> <label class = "checkbox"> <input class = "checkone" type="checkbox" name="selected" value="{{ profile.email }}"/></label></td>
+	  <td>{{ profile.name }}</td>
+	  <td>{{ profile.email }}</td></tr>
+	{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p> <input type="submit" value="Submit">
+</form>
+{% endblock %}
+

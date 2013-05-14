@@ -1,0 +1,33 @@
+{% extends "base1.html" %}
+{% block content %}     
+<h2>Search Results</h2>
+
+
+<table class="table table-striped" >
+  <thead>
+    <tr><th width="50%">Name</th><th>Sex</th><th>FB/LinkedIn</th><th>Orbital Level</th><th>Working From</th></tr>
+  </thead>
+  <tbody>
+    {% for profile in profiles %}
+    <tr><td>{{ profile.name }} &nbsp; &nbsp; &nbsp; <a href="mailto:{{ profile.email }}?Subject=Orbital%20Partner%20for%20{{ level }}"><i class="icon-envelope"></i> {{ profile.email }}</a> <br> 
+	{% if profile.preference != "" %}
+ 	<a href="#" class = "expand" title = "Show or Hide"><i class="icon-minus"></i></a>
+	<span>{{ profile.preference }}</span>
+	{% endif %}
+      </td>
+      <td>{{ profile.sex }}</td>
+      <td>
+	{% if profile.fb_link != "" %}
+	<a href="{{ profile.fb_link }}" target="_blank"><img class = "imageicon" src="../images/facebook.png"></a>
+	{% endif %}
+	{% if profile.linkedin_link != "" %}
+	<a href="{{ profile.linkedin_link }}" target="_blank"><img class = "imageicon" src="../images/linkedin.png"></a>
+	{% endif %}
+      </td>
+      <td>{{ level }}</td><td>{{ profile.orbital_country }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+

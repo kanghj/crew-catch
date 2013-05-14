@@ -1,0 +1,40 @@
+application: orbitalpartner
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+# Handler for login and redirection
+- url: /_ah/login_required
+  script: do_openid_login.app
+
+- url: /stylesheets
+  static_dir: stylesheets
+
+- url: /images
+  static_dir: images
+
+- url: /scripts
+  static_dir: scripts
+
+# Twitter Bootstrap
+- url: /bootstrap
+  static_dir: bootstrap
+
+# Handler for front page
+- url: /
+  script: orbitalpartner.app
+
+# Handler for privacy page
+- url: /policy
+  script: orbitalpartner.app
+
+# All other pages require login
+- url: /.*
+  script: nus.app
+  login: required
+
+libraries:
+- name: jinja2
+  version: latest
