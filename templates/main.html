@@ -1,34 +1,78 @@
 <html>
   <head>
-  	<script>
-    
-    //script taken from w3schools
 
-	var x=document.getElementById("demo");
+  <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map-canvas { height: 100% }
+    </style>
+
+  </head>
+  <body>
+    <p> Hello {{name}}! </p>
+
+    <div id = "demo">
+    </div>
+
+    
+    <div id = "map-canvas"> 
+    </div>
+
+  
+  	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuyc3ZQDA3Yah7i5r_i36oi1uQH5KzvkU&sensor=false">
+    </script>
+    <script type="text/javascript">
+
+    //script partially taken from w3schools
+    // and google maps api sample
+
+    var x; 
+    var pos_lat;
+    var pos_lng;
+    var map;
+
+    
 	function getLocation()
 	{
+	  x=document.getElementById("demo");
 	  if (navigator.geolocation)
 	    {
 	    navigator.geolocation.getCurrentPosition(showPosition);
 	    }
 	  else{x.innerHTML="Geolocation is not supported by this browser.";}
 	}
+
 	function showPosition(position)
 	{
+	  pos_lat = position.coords.latitude;
+	  pos_lng = position.coords.longitude;
 	  x.innerHTML="Latitude: " + position.coords.latitude + 
 	  "<br>Longitude: " + position.coords.longitude; 
+
+	  initialize();
 	}
 
-  	</script>
+      function initialize() {
+        var mapOptions = {
+          center: new google.maps.LatLng(pos_lat, pos_lng),
+          zoom: 12,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("map-canvas"),
+            mapOptions);
+        google.maps.event.addListener(map, 'click', function(event) {
+    		placeMarker(event.latLng);
+  		});
+      }
+      function placeMarker(location) {
+  var marker = new google.maps.Marker({
+      position: location,
+      map: map
+  });
 
-  </head>
-  <body>
-    <p> Hello {{name}}! </p>
-	<button onclick="getLocation()">Get Location!</button>
-    <div id = "demo">
-    </div>
-
-
-
+  map.setCenter(location);
+}
+      getLocation();
+    </script>
   </body>
 </html>

@@ -30,6 +30,8 @@ FB_APP_id = "386956621420017"
 FB_APP_secret = "1a22965d8111b9e13323202150150aed"
 redir_url = "http://www.crewcatcher.appspot.com/home"
 
+
+# base handler, for sessions
 class BaseHandler(webapp2.RequestHandler):
     def dispatch(self):
         # Get a session store for this request.
@@ -58,6 +60,7 @@ class MainPage(BaseHandler):
 
 class SignIn(BaseHandler):
     def get(self):
+        # check to see if user is logged in
         user = None
         if self.session.get('user'):
             user = self.session.get('user')
@@ -112,6 +115,7 @@ class Home(BaseHandler):
         self.response.out.write(template.render(template_values))   
 
 
+# class to use for testing
 class Test(BaseHandler):
     def get(self):
         template_values = {
@@ -120,12 +124,46 @@ class Test(BaseHandler):
         self.response.out.write(template.render(template_values))   
 
 
+
+class PrintFriendsLikes(BaseHandler):
+    def get(self):
+        try:
+            access_token = self.session['user']
+        except:
+            self.redirect('/')
+
+        #construct the query for fql
+        firstquery = ('"myPages:"' , ' "SELECT page_id FROM page_fan WHERE uid = me()" ')
+        secondquery = ( '"friends:"' , ' "SELECT name, uid FROM user WHERE uid IN (SELECT uid2 FROM friend WHERE uid1 = me()) " ')
+        thirdquery = ( '"friendsLikes:"', '"SELECT uid, page_id FROM page_fan WHERE uid IN (SELECT uid FROM #friends) and page_id IN (SELECT page_id FROM #myPages)"')
+        fourthquery = ( '"pages:"', '"SELECT page_id, name FROM page WHERE page_id IN (SELECT page_id FROM #friendsLikes)"')
+       
+        queryurl = 'https://graph.facebook.com/fql?q={' + firstquery + \
+                   secondquery + thirdquery + fourthquery + \
+                   '}&access_token=' + access_token 
+
+        #Fetch the Response from Graph API Request
+        api_response = urlfetch.fetch(queryurl)
+
+        #Get the contents of the Response
+        json_response = api_response.content
+
+        #Convert the JSON String into a dictionary
+        api_answer = json.loads(json_response)
+
+        self.response.headers['Content-Type'] = 'application/json' 
+        self.response.write(json.dumps(api_answer))
+
+
+
+
+
 # config is a dict containing the key for the sessions
 config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'key-for-crew-catch!',
 }
-
+    
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
