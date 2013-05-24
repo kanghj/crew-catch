@@ -3,16 +3,20 @@ import cgi
 # gae users library
 from google.appengine.api import users
 
-from urllib import quote
+#gae datastore
+from google.appengine.ext import db
 
+
+from urllib import quote
 
 import webapp2
 import jinja2
 
-
 import json
 import os
 import math
+import datetime
+
 
 #sessions for gae
 from webapp2_extras import sessions
@@ -33,9 +37,34 @@ FB_APP_id = "386956621420017"
 FB_APP_secret = "1a22965d8111b9e13323202150150aed"
 redir_url = "http://www.crewcatcher.appspot.com/home"
 
+# scope for facebook login
 fb_scope = "user_likes, friends_likes"
 
-# base handler, for sessions
+
+# Datastore definitions
+# modified from the giftbook example project shown during the orbital workshop
+class Persons(db.Model):
+    """Models a person identified by facebook id"""
+    person_id = db.IntegerProperty(required=True)
+    organisation = db.StringProperty()
+    location = db.GeoPtProperty()
+    interests = db.StringListProperty()
+    events = db.ListProperty(int)
+
+
+# Events should store a Person as parent, this Person is the host of the event
+class Events(db.Model):
+    """Models an event. Identified by events_id"""
+    event_name = db.StringProperty(required=True)
+    location = db.GeoPtProperty()
+    event_datetime = db.DateTimeProperty(required=True)
+
+    description = db.StringProperty(multiline=True)
+    date = db.DateTimeProperty(auto_now_add=True)  # this date contains the datetime when the Event was created, not the event's datetime
+ 
+
+
+# base handler, for supporting sessions
 class BaseHandler(webapp2.RequestHandler):
     def dispatch(self):
         # Get a session store for this request.
@@ -53,7 +82,8 @@ class BaseHandler(webapp2.RequestHandler):
         # Returns a session using the default cookie key.
         return self.session_store.get_session()
 
-# prints the landing page
+
+# display the landing page
 class MainPage(BaseHandler):
     def get(self):
         template_values = {
@@ -62,13 +92,13 @@ class MainPage(BaseHandler):
         self.response.out.write(template.render(template_values))   
 
 
-# to login to facebook
+# to log in using facebook
 class SignIn(BaseHandler):
     def get(self):
         # check to see if user is logged in
         user = None
-        if self.session.get('user'):
-            user = self.session.get('user')
+        if self.session.get('access_token'):
+            user = self.session.get('access_token')
 
         if user == None:
             if self.request.get('code') == '':
@@ -79,11 +109,14 @@ class SignIn(BaseHandler):
         else:
             self.response.write('you are logged in : ' + user);
 
-# to logout
+# to log out of facebook
 class LogOut(BaseHandler):
     def get(self):
-        if (self.session.get('user')):
-            self.session['user'] = None
+        if (self.session.get('access_token')):
+            self.session['access_token'] = None
+        if (self.session.get('user_id')):
+            self.session['user_id'] = None
+
         self.response.write("\nYou are logged out now.")
         self.redirect('/')
 
@@ -104,8 +137,8 @@ class Home(BaseHandler):
         except:
             self.redirect('/');
 
-        self.session['user'] = access_token
-
+        self.session['access_token'] = access_token
+        self.response.write(self.session.get('access_token'))
         # use the facebook api
         graph_url = u'https://graph.facebook.com'
 
@@ -122,6 +155,11 @@ class Home(BaseHandler):
 
         #Convert the JSON String into a dictionary
         api_answer = json.loads(json_response)
+        
+        # store user id in session data 
+        user_id = api_answer['id']
+        self.session['user_id'] = user_id
+        self.response.write(self.session.get('user_id'))
 
         template_values = {
             'name': api_answer['name']
@@ -144,14 +182,19 @@ class Test(BaseHandler):
 class PrintFriendsLikes(BaseHandler):
     def get(self):
         try:
-            access_token = self.session.get('user')
+            access_token = self.session.get('access_token')
         except:
             self.redirect('/')
 
-        #construct the query for fql
+        #construct the fql query 
+
+        # pages that the user likes
         firstquery = ('"myPages":' , '"SELECT page_id FROM page_fan WHERE uid=me()",')
+        # friends of the user
         secondquery = ( '"friends":' , '"SELECT name, uid FROM user WHERE uid IN (SELECT uid2 FROM friend WHERE uid1=me())",')
+        # pages that the user likes, that the user's friends like as well
         thirdquery = ( '"friendsLikes":', '"SELECT uid, page_id FROM page_fan WHERE uid IN (SELECT uid FROM #friends) and page_id IN (SELECT page_id FROM #myPages)",')
+        # the pages's names from #friendsLikes
         fourthquery = ( '"pages":', '"SELECT page_id, name FROM page WHERE page_id IN (SELECT page_id FROM #friendsLikes)"')
        
         finalquery = '{' + firstquery[0]  + firstquery[1]  + \
@@ -159,14 +202,8 @@ class PrintFriendsLikes(BaseHandler):
                    thirdquery[0]  + thirdquery[1]  + \
                    fourthquery[0]  + fourthquery[1]  + '}' 
 
-        #self.response.write(finalquery)
-        #queryurl = 'https://graph.facebook.com/fql?q=' + quote('{' + firstquery[0]  + firstquery[1]  + \
-        #           secondquery[0]  + secondquery[1]  + \
-        #           thirdquery[0]  + thirdquery[1]  + \
-        #           fourthquery[0]  + fourthquery[1]  + '}' )+ \
-        #           '&access_token=' + access_token
-
         queryurl = 'https://graph.facebook.com/fql?q=' + quote(finalquery) + '&access_token=' + access_token
+       
         #Fetch the Response from Graph API Request 
         api_response = urlfetch.fetch(queryurl)
 
@@ -176,36 +213,166 @@ class PrintFriendsLikes(BaseHandler):
         #Convert the JSON String into a dictionary
         api_answer = json.loads(json_response)
 
+        # if there is error, print out the error for debugging
+        # otherwise print the json
         try:
             self.response.write(api_answer['error'])
             self.response.write('\n' + finalquery)
         except:
             self.response.headers['Content-Type'] = 'application/json' 
             self.response.write(json.dumps(api_answer))
+        self.response.write('access : ' + access_token)
 
-
-# class to get data from user
+# class to get data from user to fill in profile
 class ReceiveData(BaseHandler):
     def post(self):
+        try:
+            user_id = self.session.get('user_id')
+        except:
+            self.redirect('/')
+
+
         lat = self.request.get('lat')
         lng = self.request.get('lng')
-        self.response.write(lat + ',' + lng)
+        location = db.GeoPt(lat=lat, lon=lng)
 
-# config is a dict containing the key for the sessions
+        org = self.request.get('organisation')
+
+        person_id = int(user_id)
+        #person_id = 12345 # for testing locally
+
+        # self.response.write(lat + ',' + lng) # for debugging purposes
+        person = Persons(person_id = person_id ,
+                        organisation = org,
+                        location = location )
+        person.put()
+
+
+# displays the user's profile
+class Profile(BaseHandler):
+    def get(self):
+        person_id = None
+        try:
+            user_id = self.session.get('user_id')
+            person_id = int(user_id)
+        except:
+            self.redirect('/')
+        
+        #person_id = 12345 # for testing locally
+
+        query = db.GqlQuery("SELECT * " +
+                          "FROM Persons " +
+                          "WHERE person_id = :1 ",
+                          person_id)
+
+        person = query.get()
+
+        template_values = {
+            'person' : person
+        } 
+        template = jinja_environment.get_template('profile.html')
+        self.response.out.write(template.render(template_values))   
+        
+
+# make a new event
+class MakeNewEvent(BaseHandler):
+    def post(self):
+        try:
+            user_id = self.session.get('user_id')
+        except:
+            self.redirect('/')
+        person_id = int(user_id)
+        #person_id = 12345 # for testing locally
+
+        query = db.GqlQuery("SELECT * " +
+                          "FROM Persons " +
+                          "WHERE person_id = :1 ",
+                          person_id)
+
+        person = query.get()
+
+        if person == None:
+            self.redirect('/error&personid=%s' % (person_id,))   # user needs to create a profile first
+        else:
+
+          name = self.request.get('eventname')
+
+          month = int(self.request.get('month'))
+          day = int(self.request.get('day'))
+          hour = int(self.request.get('hour'))
+          event_datetime = datetime.datetime(year = datetime.datetime.today().year, month = month, day = day, hour = hour)
+
+          lat = self.request.get('lat')
+          lng = self.request.get('lng')
+          location = db.GeoPt(lat=lat, lon=lng)
+
+          description = self.request.get('description')
+          
+          parent_key = person.key()
+
+          event = Events(parent = parent_key,
+                        event_name = name,
+                        event_datetime = event_datetime,
+                        location = location,
+                        description = description)
+
+          event.put()
+
+          # update the person to have the new event
+          event_key = event.key().id()
+          person.events.append(event_key)
+          person.put()
+
+
+# display form to make new event
+class NewEvent(BaseHandler):
+    def get(self):
+        self.session['foo'] = 'bar'
+        template_values = {
+        } 
+        template = jinja_environment.get_template('newevent.html')
+        self.response.out.write(template.render(template_values))   
+
+
+# prints sessions data, for debugging
+class SessionData(BaseHandler):
+    def get(self):
+        try:
+            #user_id = self.session.get('user_id')
+            access_token = self.session.get('access_token')
+        except:
+            self.redirect('/')
+        #person_id = int(user_id)
+
+        atoken = access_token
+        #userid = user_id
+
+        self.response.headers['Content-Type'] = 'application/json' 
+        self.response.write(atoken)
+       # self.response.write(userid)
+
+
+
+#config is a dict containing the key for the sessions
 config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'key-for-crew-catch!',
 }
     
-
+###
+# handlers
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signin', SignIn),
     ('/logout', LogOut),
     ('/home', Home),
-    ('/test', Test),
     ('/getfriendslikes', PrintFriendsLikes),
-    ('/setposition', ReceiveData),
-  
+    ('/test', Test),
+    ('/setprofile', ReceiveData),
+    ('/profile', Profile),
+    ('/makeevent', MakeNewEvent),
+    ('/newevent', NewEvent),
+    ('/getsessiondata', SessionData),
+
 ], config = config, debug=True)        
 

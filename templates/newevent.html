@@ -17,11 +17,24 @@
     <div id = "map-canvas"> 
     </div>
 
-    <form action = "setprofile" method = "post">
+    <form action = "makeevent" method = "post">
+
       <input type = "hidden" name = "lat" id = "in_lat" > 
       <input type = "hidden" name = "lng" id = "in_lng">
-      <label> Organisation: </label>
-      <input type = "text" name = "organisation" id = "organisation">
+
+      <label> name: </label>
+      <input type = "text" name = "eventname" id = "eventname">
+
+      <label> month</label>
+      <input type = "text" name = "month" id = "month">
+      <label> day</label>
+      <input type = "text" name = "day" id = "day">
+      <label> hour</label>
+      <input type = "text" name = "hour" id = "hour">
+
+      <label> description</label>
+      <input type = "text" name = "descript" id = "description">
+
       <input type = "submit" value = "Submit">
     </form>
 
@@ -82,7 +95,7 @@
 
       map = new google.maps.Map(document.getElementById("map-canvas"),
               mapOptions);
-      console.log('executed')
+
       // make a new marker and attach it at the user's location
       marker = new google.maps.Marker({
         position: mapOptions.center,
