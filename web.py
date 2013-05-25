@@ -35,7 +35,7 @@ jinja_environment = jinja2.Environment(
 # facebook app id and app secret
 FB_APP_id = "386956621420017"
 FB_APP_secret = "1a22965d8111b9e13323202150150aed"
-redir_url = "http://www.crewcatcher.appspot.com/home"
+redir_url = "http://www.crewcatcher.appspot.com/welcome"
 
 # scope for facebook login
 fb_scope = "user_likes, friends_likes"
@@ -79,8 +79,10 @@ class BaseHandler(webapp2.RequestHandler):
 
     @webapp2.cached_property
     def session(self):
-        # Returns a session using the default cookie key.
-        return self.session_store.get_session()
+        # Returns a session using memcache
+        backend = "memcache"
+
+        return self.session_store.get_session(backend = backend)
 
 
 # display the landing page
@@ -112,17 +114,17 @@ class SignIn(BaseHandler):
 # to log out of facebook
 class LogOut(BaseHandler):
     def get(self):
-        if (self.session.get('access_token')):
-            self.session['access_token'] = None
-        if (self.session.get('user_id')):
-            self.session['user_id'] = None
+        self.session.pop('user_id')
+        self.session.pop('access_token')
+        self.session.pop('name')
+
 
         self.response.write("\nYou are logged out now.")
         self.redirect('/')
 
 
 # logged in to facebook, prints the user's name
-class Home(BaseHandler):
+class Welcome(BaseHandler):
     def get(self):
         token_url = 'https://graph.facebook.com/oauth/access_token?client_id=' + \
         FB_APP_id + '&redirect_uri=' + quote(redir_url) + \
@@ -138,11 +140,11 @@ class Home(BaseHandler):
             self.redirect('/');
 
         self.session['access_token'] = access_token
-        self.response.write(self.session.get('access_token'))
+
         # use the facebook api
         graph_url = u'https://graph.facebook.com'
 
-        # query
+        # construct the query
         api_string = u'/me'
 
         api_request_url = graph_url + api_string + u'?access_token=' + access_token
@@ -156,16 +158,35 @@ class Home(BaseHandler):
         #Convert the JSON String into a dictionary
         api_answer = json.loads(json_response)
         
-        # store user id in session data 
-        user_id = api_answer['id']
+
+        # store user id and name in session data 
+        user_id = int(api_answer['id'])
         self.session['user_id'] = user_id
-        self.response.write(self.session.get('user_id'))
+
+        user_name = api_answer['name']
+        self.session['name'] = user_name
+        
 
         template_values = {
             'name': api_answer['name']
         } 
-        template = jinja_environment.get_template('main.html')
-        self.response.out.write(template.render(template_values))   
+
+        # check to see if user already has a profile
+        query = db.GqlQuery("SELECT * " +
+                          "FROM Persons " +
+                          "WHERE person_id = :1 ",
+                          user_id)
+
+        person = query.get()
+
+        # if user does not have a profile, go to newprofile.html
+        if (person == None):
+            template = jinja_environment.get_template('newprofile.html')
+            self.response.out.write(template.render(template_values))   
+        else:
+            #if user has a profile, go to home
+            self.redirect('/home')
+
 
 
 # class to use for testing
@@ -173,9 +194,16 @@ class Test(BaseHandler):
     def get(self):
         template_values = {
         } 
-        template = jinja_environment.get_template('main.html')
+        template = jinja_environment.get_template('newprofile.html')
         self.response.out.write(template.render(template_values))   
 
+
+class Home(BaseHandler):
+    def get(self):
+        template_values = {
+        } 
+        template = jinja_environment.get_template('home.html')
+        self.response.out.write(template.render(template_values))  
 
 
 # prints out the required facebook data for friends' likes in json
@@ -222,6 +250,7 @@ class PrintFriendsLikes(BaseHandler):
             self.response.headers['Content-Type'] = 'application/json' 
             self.response.write(json.dumps(api_answer))
         self.response.write('access : ' + access_token)
+
 
 # class to get data from user to fill in profile
 class ReceiveData(BaseHandler):
@@ -338,18 +367,18 @@ class NewEvent(BaseHandler):
 class SessionData(BaseHandler):
     def get(self):
         try:
-            #user_id = self.session.get('user_id')
+            user_id = self.session.get('user_id')
             access_token = self.session.get('access_token')
+            person_id = int(user_id)
         except:
             self.redirect('/')
-        #person_id = int(user_id)
-
+        
         atoken = access_token
-        #userid = user_id
+        userid = user_id
 
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(atoken)
-       # self.response.write(userid)
+        self.response.write(userid)
 
 
 
@@ -365,6 +394,7 @@ app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signin', SignIn),
     ('/logout', LogOut),
+    ('/welcome', Welcome),
     ('/home', Home),
     ('/getfriendslikes', PrintFriendsLikes),
     ('/test', Test),
