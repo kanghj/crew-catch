@@ -194,6 +194,7 @@ class Welcome(BaseHandler):
 # class to use for testing
 class Test(BaseHandler):
     def get(self):
+
         template_values = {
         } 
         template = jinja_environment.get_template('newprofile.html')
@@ -202,7 +203,19 @@ class Test(BaseHandler):
 
 class Home(BaseHandler):
     def get(self):
+        try:
+            access_token = self.session.get('access_token')
+        except:
+            self.redirect('/')
+
+        queryurl = 'https://graph.facebook.com/me?access_token=' + access_token
+
+        api_response = urlfetch.fetch(queryurl)
+        json_response = api_response.content
+        api_answer = json.loads(json_response)
+        
         template_values = {
+            'name' : api_answer['name'] 
         } 
         template = jinja_environment.get_template('home.html')
         self.response.out.write(template.render(template_values))  
@@ -382,8 +395,6 @@ class MakeNewEvent(BaseHandler):
 # display form to make new event
 class NewEvent(BaseHandler):
     def get(self):
-        self.session['foo'] = 'bar'
-
         template_values = {
         } 
         template = jinja_environment.get_template('newevent.html')
