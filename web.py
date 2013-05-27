@@ -16,7 +16,7 @@ import json
 import os
 import math
 import datetime
-
+import operator
 
 #sessions for gae
 from webapp2_extras import sessions
@@ -261,10 +261,19 @@ class PrintSimilarFriends(BaseHandler):
                 except:
                     similarfriends[friend] = 1
 
-            #todo: make another fql query to get friend's names
+            sortedfriends = sorted(similarfriends.iteritems(), key= operator.itemgetter(1))
+
+
             self.response.headers['Content-Type'] = 'application/json' 
-            self.response.write(json.dumps(similarfriends))
+            self.response.write(json.dumps(sortedfriends))
         
+# to display similar friends for the recommandations
+class DisplaySimilarFriends(BaseHandler):
+    def get(self):
+        template_values = {
+        } 
+        template = jinja_environment.get_template('getsimilarfriends.html')
+        self.response.out.write(template.render(template_values))   
 
 
 # class to get data from user to fill in profile
@@ -415,6 +424,7 @@ app = webapp2.WSGIApplication([
     ('/welcome', Welcome),
     ('/home', Home),
     ('/getsimilarfriends', PrintSimilarFriends),
+    ('/displaysimilarfriends', DisplaySimilarFriends),
     ('/test', Test),
     ('/setprofile', ReceiveData),
     ('/profile', Profile),

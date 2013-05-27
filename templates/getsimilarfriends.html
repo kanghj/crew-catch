@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+</head>
+<body>
+  <div >
+    <ul  id="people">
+
+    </ul>
+  </div>
+<script>
+(function() {
+  var flickerAPI = "http://www.crewcatcher.appspot.com/getsimilarfriends";
+  $.getJSON( flickerAPI, {
+  })
+  .done(function( data ) {
+    console.log(data)
+    $.each( data, function( i, item ) {
+      console.log(item[0]);
+      var listitem = $("<li>").appendTo("#people");
+      listitem.append(item[0]);
+      listitem.append("</li>");
+    });
+  });
+})();
+</script>
+ 
+</body>
+</html>
+
+<-- taken and modify from http://api.jquery.com/jQuery.getJSON/ -->
