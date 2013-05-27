@@ -109,7 +109,9 @@ class SignIn(BaseHandler):
             else:
                 self.redirect('/failed')
         else:
-            self.response.write('you are logged in : ' + user);
+            self.response.write('you are logged in : fb access_token = ' + user);
+            self.response.write('<a href="/profile"> click to go to profile </a> ' )
+            self.response.write('<p><a href="/logout"> logout</a> ')
 
 # to log out of facebook
 class LogOut(BaseHandler):
@@ -123,7 +125,7 @@ class LogOut(BaseHandler):
         self.redirect('/')
 
 
-# logged in to facebook, prints the user's name
+# logged in to facebook, redirects to another page
 class Welcome(BaseHandler):
     def get(self):
         token_url = 'https://graph.facebook.com/oauth/access_token?client_id=' + \
@@ -206,8 +208,8 @@ class Home(BaseHandler):
         self.response.out.write(template.render(template_values))  
 
 
-# prints out the required facebook data for friends' likes in json
-class PrintFriendsLikes(BaseHandler):
+# prints out the required facebook data for similar friends
+class PrintSimilarFriends(BaseHandler):
     def get(self):
         try:
             access_token = self.session.get('access_token')
@@ -217,18 +219,21 @@ class PrintFriendsLikes(BaseHandler):
         #construct the fql query 
 
         # pages that the user likes
-        firstquery = ('"myPages":' , '"SELECT page_id FROM page_fan WHERE uid=me()",')
+        firstquery = ('"myPages":' , '"SELECT page_id FROM page_fan WHERE uid=me()"')
         # friends of the user
-        secondquery = ( '"friends":' , '"SELECT name, uid FROM user WHERE uid IN (SELECT uid2 FROM friend WHERE uid1=me())",')
-        # pages that the user likes, that the user's friends like as well
-        thirdquery = ( '"friendsLikes":', '"SELECT uid, page_id FROM page_fan WHERE uid IN (SELECT uid FROM #friends) and page_id IN (SELECT page_id FROM #myPages)",')
+        secondquery = ( '"friends":' , '"SELECT name, uid FROM user WHERE uid IN (SELECT uid2 FROM friend WHERE uid1=me())"')
+        # pages,friend that the user likes, that the user's friends like as well
+        thirdquery = ( '"friendsLikes":', '"SELECT uid, page_id FROM page_fan WHERE uid IN (SELECT uid FROM #friends) and page_id IN (SELECT page_id FROM #myPages)"')
         # the pages's names from #friendsLikes
         fourthquery = ( '"pages":', '"SELECT page_id, name FROM page WHERE page_id IN (SELECT page_id FROM #friendsLikes)"')
-       
-        finalquery = '{' + firstquery[0]  + firstquery[1]  + \
-                   secondquery[0]  + secondquery[1]  + \
-                   thirdquery[0]  + thirdquery[1]  + \
-                   fourthquery[0]  + fourthquery[1]  + '}' 
+        # get similar friends' names
+        fifthquery = ( '"similarfriend":', '"SELECT name FROM user WHERE uid IN (SELECT uid FROM #friendsLikes)"')
+
+        finalquery = '{' + firstquery[0]  + firstquery[1]  + ',' + \
+                   secondquery[0]  + secondquery[1]  + ',' + \
+                   thirdquery[0]  + thirdquery[1]  + ',' + \
+                   fourthquery[0]  + fourthquery[1]  + ',' + \
+                   fifthquery[0] + fifthquery[1] + '}' 
 
         queryurl = 'https://graph.facebook.com/fql?q=' + quote(finalquery) + '&access_token=' + access_token
        
@@ -247,9 +252,19 @@ class PrintFriendsLikes(BaseHandler):
             self.response.write(api_answer['error'])
             self.response.write('\n' + finalquery)
         except:
+            similarfriends = {}
+            friends = api_answer['data'][4]["fql_result_set"]
+            for friendsdata in friends:
+                friend = friendsdata["name"]
+                try:
+                    similarfriends[friend] += 1
+                except:
+                    similarfriends[friend] = 1
+
+            #todo: make another fql query to get friend's names
             self.response.headers['Content-Type'] = 'application/json' 
-            self.response.write(json.dumps(api_answer))
-        self.response.write('access : ' + access_token)
+            self.response.write(json.dumps(similarfriends))
+        
 
 
 # class to get data from user to fill in profile
@@ -296,6 +311,7 @@ class Profile(BaseHandler):
 
         person = query.get()
 
+
         template_values = {
             'person' : person
         } 
@@ -310,6 +326,7 @@ class MakeNewEvent(BaseHandler):
             user_id = self.session.get('user_id')
         except:
             self.redirect('/')
+        
         person_id = int(user_id)
         #person_id = 12345 # for testing locally
 
@@ -357,6 +374,7 @@ class MakeNewEvent(BaseHandler):
 class NewEvent(BaseHandler):
     def get(self):
         self.session['foo'] = 'bar'
+
         template_values = {
         } 
         template = jinja_environment.get_template('newevent.html')
@@ -382,13 +400,13 @@ class SessionData(BaseHandler):
 
 
 
+
 #config is a dict containing the key for the sessions
 config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'key-for-crew-catch!',
 }
-    
-###
+
 # handlers
 app = webapp2.WSGIApplication([
     ('/', MainPage),
@@ -396,7 +414,7 @@ app = webapp2.WSGIApplication([
     ('/logout', LogOut),
     ('/welcome', Welcome),
     ('/home', Home),
-    ('/getfriendslikes', PrintFriendsLikes),
+    ('/getsimilarfriends', PrintSimilarFriends),
     ('/test', Test),
     ('/setprofile', ReceiveData),
     ('/profile', Profile),

@@ -1,10 +1,13 @@
 <html>
 
 	<body>
-		<p> hello world</p>
+		<a href="/newevent"> Make new event </a>
+
+		<p> hello! This is your profile:</p>
 
 	  <p>{{ person.location }} </p>
 	    <p>{{ person.organisation  }} </p>
+	    <p> Events:
         {% for event in person.events %}
         <p> {{event}} </p>
         {%endfor%}
