@@ -1,10 +1,29 @@
 <html>
-    <head>
-    </head>
-	<body>
-	    Hi {{name}}
-	    <a href="/profile"> Profile </a>
-	    
-    </body>
-
+<head>
+	<title> Crew Finder </title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+	<link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+	<link type="text/css" rel="stylesheet" href="../stylesheets/main.css">
+</head>
+<body>
+	<div class="container-fluid">  
+		<div class="row-fluid">
+			<img class="logo" src="../images/logo.png">
+		</div>
+		<!-- Main navigation -->      
+		<div class = "navbar">
+			<div class = "navbar-inner">
+				<ul class = "nav">
+					<li> <a href="/home"> Home </a></li>
+					<li> <a href="/newprofile"> Edit Profile </a></li>
+					<li> <a href="/teams"> Teams </a></li>
+					<li> <a href="/newevent"> New Event </a></li> 
+					<li> <a href="/logout"> Sign out </a></li>
+				</ul>
+			</div> 
+		</div>
+		<span class="label label-info">Hi {{name}}</span>	
+	</div>
+</body>
 </html>

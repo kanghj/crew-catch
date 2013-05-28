@@ -3,10 +3,23 @@
     text-align:center;
 }
 
+/* For the logo */
+.logo {
+    height:80px;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 .imagecenter {
     display: block;   
     margin-left: auto;   
     margin-right: auto;
+}
+
+/* Shift the text down 1cm */
+.top-pad-one {
+    margin-top: 1cm;
 }
 
 .imageicon {

@@ -6,8 +6,6 @@ threadsafe: true
 
 handlers:
 # Handler for login and redirection
-- url: /_ah/login_required
-  script: do_openid_login.app
 
 - url: /stylesheets
   static_dir: stylesheets
@@ -21,11 +19,6 @@ handlers:
 # Twitter Bootstrap
 - url: /bootstrap
   static_dir: bootstrap
-
-
-# Handler for privacy page
-- url: /policy
-  script: orbitalpartner.app
 
 # All other pages
 - url: /.*

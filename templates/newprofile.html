@@ -1,34 +1,70 @@
 <html>
-  <head>
-
+<head>
+  <title> Crew Finder </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+  <link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+  <link type="text/css" rel="stylesheet" href="../stylesheets/main.css">
   <style type="text/css">
-      html { height: 100% }
-      body { height: 100%; margin: 0; padding: 0 }
-      #map-canvas { height: 50%; width: 50% }
-    </style>
+  html { height: 100% }
+  body { height: 100%; margin: 0; padding: 0 }
+  #map-canvas { height: 50%; width: 50% }
+  </style>
+</head>
 
-  </head>
-  <body>
-    <p> Hello {{name}}! </p>
-
-    <div id = "demo">
+<body>
+  <div class="container-fluid">  
+    <div class="row-fluid">
+      <img class="logo" src="../images/logo.png">
     </div>
-    
-    <div id = "map-canvas"> 
+    <!-- Main navigation -->      
+    <div class = "navbar">
+      <div class = "navbar-inner">
+        <ul class = "nav">
+          <li> <a href="/home"> Home </a></li>
+          <li> <a href="/newprofile"> Edit Profile </a></li>
+          <li> <a href="/teams"> Teams </a></li>
+          <li class = "active"> <a href="/newevent"> New Event </a></li> 
+          <li> <a href="/logout"> Sign out </a></li>
+        </ul>
+      </div> 
     </div>
+    <span class="label label-info">Hi {{name}}</span>
+    <form class="form-horizontal" action = "setprofile" method = "post">
+      <fieldset>
+        <legend><b> Edit Profile </b></legend>     
 
-    <form action = "setprofile" method = "post">
-      <input type = "hidden" name = "lat" id = "in_lat" > 
-      <input type = "hidden" name = "lng" id = "in_lng">
-      <label> Organisation: </label>
-      <input type = "text" name = "organisation" id = "organisation">
-      <input type = "submit" value = "Submit">
+        <div class="control-group">
+          <label class="control-label"> <b>Organization:</b> </label>
+          <div class="controls">
+            <input type = "text" name = "organization" id = "organization">
+          </div>
+        </div>        
+        
+        <div class="control-group">
+          <label class="control-label"> <b>Location:</b> </label>
+          <div class="controls">
+        <input type = "hidden" name = "lat" id = "in_lat" > 
+        <input type = "hidden" name = "lng" id = "in_lng">
+            <div id = "demo">
+            </div>  
+            <div id = "map-canvas"> 
+            </div>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="controls">
+            <button class = "btn" type = "submit" value = "Submit"> Submit </button>
+          </div>
+        </div>
+        
+      </fieldset>
     </form>
+  </div>
 
-
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuyc3ZQDA3Yah7i5r_i36oi1uQH5KzvkU&sensor=true">
-    </script>
-    <script type="text/javascript">
+  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuyc3ZQDA3Yah7i5r_i36oi1uQH5KzvkU&sensor=true">
+  </script>
+  <script type="text/javascript">
 
     //script partially taken from w3schools
     // and google maps api 
@@ -40,7 +76,7 @@
     var marker;
     var form_lat;
     var form_lng;
-      
+
     // use html5 geolocation to get the user's current location
     // and run showPosition if the position can be obtained
     function getLocation()
@@ -81,7 +117,7 @@
       };
 
       map = new google.maps.Map(document.getElementById("map-canvas"),
-              mapOptions);
+        mapOptions);
       console.log('executed')
       // make a new marker and attach it at the user's location
       marker = new google.maps.Marker({
@@ -110,4 +146,4 @@
 
     </script>
   </body>
-</html>
+  </html>

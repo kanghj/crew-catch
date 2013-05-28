@@ -91,7 +91,7 @@ class MainPage(BaseHandler):
         template_values = {
         } 
         template = jinja_environment.get_template('landingpage.html')
-        self.response.out.write(template.render(template_values))   
+        self.response.out.write(template.render(template_values))
 
 
 # to log in using facebook
@@ -111,7 +111,7 @@ class SignIn(BaseHandler):
         else:
             self.response.write('you are logged in : fb access_token = ' + user);
             self.response.write('<a href="/profile"> click to go to profile </a> ' )
-            self.response.write('<p><a href="/logout"> logout</a> ')
+            self.response.write('<p><a href="/logout"> logout </a> ')
 
 # to log out of facebook
 class LogOut(BaseHandler):
@@ -350,7 +350,30 @@ class Profile(BaseHandler):
         } 
         template = jinja_environment.get_template('profile.html')
         self.response.out.write(template.render(template_values))   
+
+# create or edit a profile
+class NewProfile(BaseHandler):
+    def get(self):
+        person_id = None
+        try:
+            user_id = self.session.get('user_id')
+            person_id = int(user_id)
+        except:
+            self.redirect('/')
         
+        query = db.GqlQuery("SELECT * " +
+                          "FROM Persons " +
+                          "WHERE person_id = :1 ",
+                          person_id)
+
+        person = query.get()
+
+
+        template_values = {
+            'person' : person
+        } 
+        template = jinja_environment.get_template('newprofile.html')
+        self.response.out.write(template.render(template_values))
 
 # make a new event
 class MakeNewEvent(BaseHandler):
@@ -453,6 +476,7 @@ app = webapp2.WSGIApplication([
     ('/makeevent', MakeNewEvent),
     ('/newevent', NewEvent),
     ('/getsessiondata', SessionData),
+    ('/newprofile', NewProfile)
 
 ], config = config, debug=True)        
 
