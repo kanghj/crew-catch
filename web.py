@@ -240,7 +240,7 @@ class PrintSimilarFriends(BaseHandler):
         # the pages's names from #friendsLikes
         fourthquery = ( '"pages":', '"SELECT page_id, name FROM page WHERE page_id IN (SELECT page_id FROM #friendsLikes)"')
         # get similar friends' names
-        fifthquery = ( '"similarfriend":', '"SELECT name FROM user WHERE uid IN (SELECT uid FROM #friendsLikes)"')
+        fifthquery = ( '"similarfriend":', '"SELECT uid, name FROM user WHERE uid IN (SELECT uid FROM #friendsLikes)"')
 
         finalquery = '{' + firstquery[0]  + firstquery[1]  + ',' + \
                    secondquery[0]  + secondquery[1]  + ',' + \
@@ -266,18 +266,29 @@ class PrintSimilarFriends(BaseHandler):
             self.response.write('\n' + finalquery)
         except:
             similarfriends = {}
-            friends = api_answer['data'][4]["fql_result_set"]
+            friends = api_answer['data'][2]["fql_result_set"]
             for friendsdata in friends:
-                friend = friendsdata["name"]
+                friend = friendsdata["uid"]
                 try:
                     similarfriends[friend] += 1
                 except:
                     similarfriends[friend] = 1
+            
+            similarfriends_names = {}
+            friends_uid = api_answer['data'][4]["fql_result_set"]
+            for friendsdata in friends_uid:
+                uid = friendsdata["uid"]
+                name = friendsdata["name"]
+                similarfriends_names[name] = similarfriends[uid]
 
-            sortedfriends = sorted(similarfriends.iteritems(), key= operator.itemgetter(1))
+            # similarfriends is now a dict(key = uid , value = number of likes shared with the user) 
+            # sort the dictionary
+
+            sortedfriends = sorted(similarfriends_names.iteritems(), key= operator.itemgetter(1), reverse = True)
 
 
             self.response.headers['Content-Type'] = 'application/json' 
+       #     self.response.write(json.dumps(api_answer))
             self.response.write(json.dumps(sortedfriends))
         
 # to display similar friends for the recommandations
