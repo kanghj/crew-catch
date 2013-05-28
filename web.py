@@ -110,7 +110,7 @@ class SignIn(BaseHandler):
                 self.redirect('/failed')
         else:
             self.response.write('you are logged in : fb access_token = ' + user);
-            self.response.write('<a href="/profile"> click to go to profile </a> ' )
+            self.response.write('<a href="/home"> click to go to profile </a> ' )
             self.response.write('<p><a href="/logout"> logout </a> ')
 
 # to log out of facebook

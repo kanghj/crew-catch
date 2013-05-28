@@ -22,7 +22,7 @@
       <div class = "navbar-inner">
         <ul class = "nav">
           <li> <a href="/home"> Home </a></li>
-          <li> <a href="/newprofile"> Edit Profile </a></li>
+          <li class="active"> <a href="/newprofile"> Edit Profile </a></li>
           <li> <a href="/teams"> Teams </a></li>
           <li class = "active"> <a href="/newevent"> New Event </a></li> 
           <li> <a href="/logout"> Sign out </a></li>
@@ -30,36 +30,38 @@
       </div> 
     </div>
     <span class="label label-info">Hi {{name}}</span>
-    <form class="form-horizontal" action = "setprofile" method = "post">
-      <fieldset>
-        <legend><b> Edit Profile </b></legend>     
+    <div class="well">
+      <form class="form-horizontal" action = "setprofile" method = "post">
+        <fieldset>
+          <legend><b> Edit Profile </b></legend>     
 
-        <div class="control-group">
-          <label class="control-label"> <b>Organization:</b> </label>
-          <div class="controls">
-            <input type = "text" name = "organization" id = "organization">
-          </div>
-        </div>        
-        
-        <div class="control-group">
-          <label class="control-label"> <b>Location:</b> </label>
-          <div class="controls">
-        <input type = "hidden" name = "lat" id = "in_lat" > 
-        <input type = "hidden" name = "lng" id = "in_lng">
-            <div id = "demo">
-            </div>  
-            <div id = "map-canvas"> 
+          <div class="control-group">
+            <label class="control-label"> <b>Organization:</b> </label>
+            <div class="controls">
+              <input type = "text" name = "organization" id = "organization">
+            </div>
+          </div>        
+          
+          <div class="control-group">
+            <label class="control-label"> <b>Location:</b> </label>
+            <div class="controls">
+              <input type = "hidden" name = "lat" id = "in_lat" > 
+              <input type = "hidden" name = "lng" id = "in_lng">
+              <div id = "demo">
+              </div>  
+              <div id = "map-canvas"> 
+              </div>
             </div>
           </div>
-        </div>
-        <div class="control-group">
-          <div class="controls">
-            <button class = "btn" type = "submit" value = "Submit"> Submit </button>
+          <div class="control-group">
+            <div class="controls">
+              <button class = "btn" type = "submit" value = "Submit"> Submit </button>
+            </div>
           </div>
-        </div>
-        
-      </fieldset>
-    </form>
+          
+        </fieldset>
+      </form>
+    </div>
   </div>
 
   <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuyc3ZQDA3Yah7i5r_i36oi1uQH5KzvkU&sensor=true">

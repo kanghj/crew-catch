@@ -31,52 +31,52 @@
     </div>
     <span class="label label-info">Hi {{name}}</span> 
 
-
-    <form class="form-horizontal" action = "makeevent" method = "post">
-      <fieldset>
-        <legend><b> New Event Details </b></legend>        
-        <div class="control-group">
-          <label class="control-label"> <b>Event Name:</b> </label>
-          <div class="controls">
-            <input type = "text" name = "eventname" id = "eventname">
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label"> <b>Time:</b> </label>
-          <div class="controls">
-            <input type = "text" name="month" id="month" placeholder="Month">
-            <input type = "text" name = "day" id = "day" placeholder="Day">
-            <input type = "text" name = "hour" id = "hour" placeholder="Hour">
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label"> <b>Description:</b> </label>  
-          <div class="controls">
-            <input type = "text" name = "descript" id = "description">
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label"> <b>Location:</b> </label>
-          <div class="controls">
-            <input type = "hidden" name = "lat" id = "in_lat" > 
-            <input type = "hidden" name = "lng" id = "in_lng">
-            <div id = "demo">
-            </div>  
-            <div id = "map-canvas"> 
+    <div class = "well">
+      <form class="form-horizontal" action = "makeevent" method = "post">
+        <fieldset>
+          <legend><b> New Event Details </b></legend>        
+          <div class="control-group">
+            <label class="control-label"> <b>Event Name:</b> </label>
+            <div class="controls">
+              <input type = "text" name = "eventname" id = "eventname">
             </div>
           </div>
-        </div>
-        <div class="control-group">
-          <div class="controls">
-            <button class = "btn" type = "submit" value = "Submit"> Submit </button>
+          <div class="control-group">
+            <label class="control-label"> <b>Time:</b> </label>
+            <div class="controls">
+              <input type = "text" name="month" id="month" placeholder="Month">
+              <input type = "text" name = "day" id = "day" placeholder="Day">
+              <input type = "text" name = "hour" id = "hour" placeholder="Hour">
+            </div>
           </div>
-        </div>
-        
-      </fieldset>
-    </form>
 
+          <div class="control-group">
+            <label class="control-label"> <b>Description:</b> </label>  
+            <div class="controls">
+              <input type = "text" name = "descript" id = "description">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label"> <b>Location:</b> </label>
+            <div class="controls">
+              <input type = "hidden" name = "lat" id = "in_lat" > 
+              <input type = "hidden" name = "lng" id = "in_lng">
+              <div id = "demo">
+              </div>  
+              <div id = "map-canvas"> 
+              </div>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
+              <button class = "btn" type = "submit" value = "Submit"> Submit </button>
+            </div>
+          </div>
+          
+        </fieldset>
+      </form>
+    </div>
 
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuyc3ZQDA3Yah7i5r_i36oi1uQH5KzvkU&sensor=true">
     </script>
